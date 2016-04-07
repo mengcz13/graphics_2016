@@ -38,6 +38,8 @@ private slots:
 
     void mouseReleaseEvent(QMouseEvent* m);
 
+    void on_antialias_checkBox_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     Opencv_Drawer opencvdrawer;

@@ -10,9 +10,10 @@ Opencv_Drawer::Opencv_Drawer(int width, int height, int ap)
     weight_table[0] = weight_table[2] = weight_table[6] = weight_table[8] = 1;
     weight_table[1] = weight_table[3] = weight_table[5] = weight_table[7] = 2;
     weight_table[4] = 4;
+    enable_antialias = false;
 }
 
-void Opencv_Drawer::Bresenhamline(int x0, int y0, int x1, int y1, Vec3b& bgr, bool enable_antialias)
+void Opencv_Drawer::Bresenhamline(int x0, int y0, int x1, int y1, Vec3b& bgr)
 {
     if (iflegal(x0, y0) && iflegal(x1, y1))
     {

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Title2</title>
+<link rel="stylesheet" href="https://stackedit.io/res-min/themes/base.css" />
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body><div class="container"><h1 id="图形学第一次作业报告">图形学第一次作业报告</h1>
+
+<p>计45 孟垂正 2013010952</p>
+
+<h2 id="一-作业内容">一. 作业内容</h2>
+
+<ol>
+<li>Bresenham算法绘制线段</li>
+<li>区域加权采样法反走样</li>
+</ol>
+
+<h2 id="二-实现方法">二. 实现方法</h2>
+
+<h3 id="1-bresenham算法绘制线段">1. Bresenham算法绘制线段</h3>
+
+<p>Bresenham算法绘制原理是通过计算每个像素点的误差项符号来决定下一个像素取右边点还是右上点. <br>
+以线段<script type="math/tex" id="MathJax-Element-1829">|dx|\geq|dy|</script>的情况为例, 记<script type="math/tex" id="MathJax-Element-1830">e</script>为当前位置的<script type="math/tex" id="MathJax-Element-1831">y</script>与所在像素方格中点纵坐标<script type="math/tex" id="MathJax-Element-1832">y_{mid}</script>之差. 显然<script type="math/tex" id="MathJax-Element-1833">e</script>初始值为-0.5. 记<script type="math/tex" id="MathJax-Element-1834">k=\frac{dy}{dx}</script>, <script type="math/tex" id="MathJax-Element-1835">x</script>在自左至右的过程中增加1, 则<script type="math/tex" id="MathJax-Element-1836">e</script>相应增加<script type="math/tex" id="MathJax-Element-1837">k</script>. <script type="math/tex" id="MathJax-Element-1838">k<0</script>表明右侧像素距离直线更近, <script type="math/tex" id="MathJax-Element-1839">k\geq0</script>表明右上方像素距离直线更近, 此时应将<script type="math/tex" id="MathJax-Element-1840">e</script>相应减1. <br>
+为了转化为整数运算以加快速度, 将<script type="math/tex" id="MathJax-Element-1841">e</script>的值乘以<script type="math/tex" id="MathJax-Element-1842">2dx</script>倍. 此时<script type="math/tex" id="MathJax-Element-1843">e</script>的初始值设置为:</p>
+
+<pre class="prettyprint"><code class="language-cpp hljs ">e = -dx;</code></pre>
+
+<p>而<script type="math/tex" id="MathJax-Element-1810">e</script>每次的增量变为<script type="math/tex" id="MathJax-Element-1811">2dy</script>, 选择右上方像素后<script type="math/tex" id="MathJax-Element-1812">e</script>的减少量为<script type="math/tex" id="MathJax-Element-1813">-2dx</script>.</p>
+
+
+
+<pre class="prettyprint"><code class="language-cpp hljs "><span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt;= dx; ++i)
+{
+    draw_pixel(x++, y, bgr);
+    e += <span class="hljs-number">2</span> * absdy; <span class="hljs-comment">// Use abs in order to keep with the situation where dy &lt; 0</span>
+    <span class="hljs-keyword">if</span> (e &gt;= <span class="hljs-number">0</span>)
+    {
+        y += inc;
+        e -= (<span class="hljs-number">2</span> * dx);
+    }
+}</code></pre>
+
+
+
+<h3 id="2-区域加权采样法反走样">2. 区域加权采样法反走样</h3>
+
+<p>加权区域采样方法使相交区域对亮度的贡献值依赖于该区域与亮度中心之间的距离. 滤波器函数取高斯滤波器.  <br>
+<script type="math/tex; mode=display" id="MathJax-Element-2980">\omega(x, y)=\dfrac{1}{\sqrt{2\pi \sigma}}e^{\frac{x^2+y^2}{2\sigma^2}}</script> <br>
+为了减少计算量, 采用加权表方法进行离散计算. 加权表可以用: <br>
+<script type="math/tex; mode=display" id="MathJax-Element-2981">\dfrac{1}{16}\begin{bmatrix}1&2&1\\2&4&2\\1&2&1\\\end{bmatrix}</script> <br>
+即将每个像素分为<script type="math/tex" id="MathJax-Element-2982">3\times3</script>个子像素, 使用Bresenham算法计算线段经过了哪些像素, 根据加权表计算这些像素对原像素亮度的贡献并着色. <br>
+实现算法时, 采用的加权表的规模为<script type="math/tex" id="MathJax-Element-2983">3\times3</script>, 问题转化为在一张横纵像素数均为待显示画面像素数3倍的画布上进行直线绘制并在原图上着色的问题. 考虑到仅仅绘制一像素宽的线段将使得图像变暗, 故实际绘制了并行的3条线段, 总宽度为3像素. <br>
+为了避免对全图的无谓扫描, 绘制过程中每绘制完一个大像素中的3个小像素, 即用加权表计算大像素的颜色并进行着色. 因此使用了一个<script type="math/tex" id="MathJax-Element-2984">3\times9</script>的矩阵作为buffer(极端情况下宽度3像素的线段会涉及到3个大像素). </p>
+
+<pre class="prettyprint"><code class="language-cpp hljs ">Mat buffer = Mat::zeros(anti_para, anti_para * <span class="hljs-number">3</span>, CV_8UC3); <span class="hljs-comment">// 3 means upper, middle and bottom</span></code></pre>
+
+<p>绘制时根据Bresenham画线算法在buffer中进行标记并记录buffer对应的大像素位置. </p>
+
+<pre class="prettyprint"><code class="language-cpp hljs "><span class="hljs-keyword">if</span> (x % anti_para == <span class="hljs-number">0</span>) { <span class="hljs-comment">// Get the position of meta pixel</span>
+    act_x = x / anti_para;
+    act_y = y / anti_para;
+}</code></pre>
+
+<p>到达buffer边界后计算整个buffer颜色RGB值的加权平均, 根据此结果为大像素着色. </p>
+
+<pre class="prettyprint"><code class="language-cpp hljs "><span class="hljs-keyword">if</span> (x % anti_para == anti_para - <span class="hljs-number">1</span>) {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> k = <span class="hljs-number">0</span>; k &lt; <span class="hljs-number">2</span>; ++k) {
+        <span class="hljs-keyword">int</span> startx = <span class="hljs-number">0</span>;
+        <span class="hljs-keyword">int</span> starty = k * anti_para;
+        <span class="hljs-keyword">if</span> (iflegal(act_x, act_y + k)) {
+            <span class="hljs-keyword">int</span> bsum = <span class="hljs-number">0</span>, gsum = <span class="hljs-number">0</span>, rsum = <span class="hljs-number">0</span>;
+            <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> pick_x = <span class="hljs-number">0</span>; pick_x &lt; anti_para; ++pick_x) {
+                <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> pick_y = <span class="hljs-number">0</span>; pick_y &lt; anti_para; ++pick_y) {
+                    bsum += (weight_table[pick_x * anti_para + pick_y] * buffer.at&lt;Vec3b&gt;(pick_x, pick_y + starty)[<span class="hljs-number">0</span>]);
+                    gsum += (weight_table[pick_x * anti_para + pick_y] * buffer.at&lt;Vec3b&gt;(pick_x, pick_y + starty)[<span class="hljs-number">1</span>]);
+                    rsum += (weight_table[pick_x * anti_para + pick_y] * buffer.at&lt;Vec3b&gt;(pick_x, pick_y + starty)[<span class="hljs-number">2</span>]);
+                }
+            }
+            img.at&lt;Vec3b&gt;(act_x, act_y + k)[<span class="hljs-number">0</span>] = (<span class="hljs-keyword">int</span>)((<span class="hljs-keyword">double</span>)bsum / weight_sum);
+            img.at&lt;Vec3b&gt;(act_x, act_y + k)[<span class="hljs-number">1</span>] = (<span class="hljs-keyword">int</span>)((<span class="hljs-keyword">double</span>)gsum / weight_sum);
+            img.at&lt;Vec3b&gt;(act_x, act_y + k)[<span class="hljs-number">2</span>] = (<span class="hljs-keyword">int</span>)((<span class="hljs-keyword">double</span>)rsum / weight_sum);
+        }
+    }
+    buffer = Mat::zeros(anti_para, anti_para * <span class="hljs-number">3</span>, CV_8UC3);
+}</code></pre>
+
+<p>与扫描全图相比, 此方法存在一定误差, 但计算速度大大加快, 可以做到实时绘制.</p>
+
+
+
+<h2 id="三-demo操作说明">三. Demo操作说明</h2>
+
+<ul>
+<li>X0, Y0, X1, Y1用于设置起点终点坐标, 点击Draw Line按钮绘制.</li>
+<li>也可以使用鼠标直接在黑色区域内拖动绘制.</li>
+<li>RGB设置线段颜色值, 默认为白色.</li>
+<li>Clear清除区域中所有线段.</li>
+<li>勾选Antialias打开反走样功能.</li>
+</ul>
+
+<h2 id="四-补充">四. 补充</h2>
+
+<ul>
+<li>本程序基于Qt 5.5.1 (GCC 4.9.1 20140922 (Red Hat 4.9.1-10), 64 bit), 使用了Qt的窗口控件等GUI, 但绘图部分使用Bresenham算法和Opencv完成, 未使用Qt图形库.</li>
+<li>实验过程中发现Opencv的highgui和Qt的GUI存在不兼容情况, 考虑使用Qt显示Opencv得到的图片. 而Opencv的Mat需要经过转换才能使用Qt的Label显示, 具体方法如下:</li>
+</ul>
+
+<pre class="prettyprint"><code class="language-cpp hljs ">QImage Opencv_Drawer::cvmat2qtimage()
+{
+    QImage qtimage(img.data, img.cols, img.rows, img.step, QImage::Format_RGB888);
+    <span class="hljs-keyword">return</span> qtimage.rgbSwapped();
+}
+...
+<span class="hljs-keyword">void</span> MainWindow::draw_qpix()
+{
+    QImage img = opencvdrawer.cvmat2qtimage();
+    ui-&gt;label-&gt;setPixmap(QPixmap::fromImage(img));
+    ui-&gt;label-&gt;resize(img.width(), img.height());
+}</code></pre>
+
+<blockquote>
+  <p>Written with <a href="https://stackedit.io/">StackEdit</a>.</p>
+</blockquote></div></body>
+</html>
