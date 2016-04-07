@@ -170,50 +170,6 @@ void Opencv_Drawer::Bresenhamline(int x0, int y0, int x1, int y1, Vec3b& bgr, bo
     }
 }
 
-//void Opencv_Drawer::Bresen_antialias_line(int x0, int y0, int x1, int y1, Vec3b& bgr) {
-//    if (iflegal(x0, y0) && iflegal(x1, y1)) {
-//        Mat back_img = img;
-//        img = Mat::zeros(width() * anti_para, height() * anti_para, CV_8UC3);
-//        x0 *= anti_para; y0 *= anti_para; x1 *= anti_para; y1 *= anti_para;
-//        if (abs(x1 - x0) > abs(y1 - y0)) {
-//            for (int i = 0; i < anti_para; ++i) {
-//                Bresenhamline(x0, y0 + i, x1, y1 + i, bgr);
-//            }
-//        }
-//        else {
-//            for (int i = 0; i < anti_para; ++i) {
-//                Bresenhamline(x0 + i, y0, x1 + i, y1, bgr);
-//            }
-//        }
-//        for (int i = 0; i < back_img.rows; ++i)
-//            for (int j = 0; j < back_img.cols; ++j) {
-//                int b = 0, g = 0, r = 0;
-//                for (int ii = 0; ii < anti_para; ++ii)
-//                    for (int jj = 0; jj < anti_para; ++jj) {
-//                        b += (img.at<Vec3b>(i * anti_para + ii, j * anti_para + jj)[0] * weight_table[ii * anti_para + jj]);
-//                        g += (img.at<Vec3b>(i * anti_para + ii, j * anti_para + jj)[1] * weight_table[ii * anti_para + jj]);
-//                        r += (img.at<Vec3b>(i * anti_para + ii, j * anti_para + jj)[2] * weight_table[ii * anti_para + jj]);
-//                    }
-//                if (b != 0 || g != 0 || r != 0) {
-//                    back_img.at<Vec3b>(i, j)[0] = (int)((double)b / weight_sum);
-//                    back_img.at<Vec3b>(i, j)[1] = (int)((double)g / weight_sum);
-//                    back_img.at<Vec3b>(i, j)[2] = (int)((double)r / weight_sum);
-//                }
-//            }
-//        img = back_img;
-//        if (abs(x1 - x0) > abs(y1 - y0)) {
-//                    for (int i = 0; i < anti_para; ++i) {
-//                        Bresenhamline(x0 + i, y0 + i, x1 + i, y1 + i, bgr);
-//                    }
-//                }
-//                else {
-//                    for (int i = 0; i < anti_para; ++i) {
-//                        Bresenhamline(x0 + i, y0, x1 + i, y1, bgr);
-//                    }
-//                }
-//    }
-//}
-
 bool Opencv_Drawer::iflegal(int x0, int y0)
 {
     return (0 <= x0 && x0 < img.rows && 0 <= y0 && y0 < img.cols);

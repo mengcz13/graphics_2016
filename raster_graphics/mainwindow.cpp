@@ -37,7 +37,6 @@ void MainWindow::draw_all_lines()
     opencvdrawer.clear();
     foreach (l, linelist) {
         opencvdrawer.Bresenhamline(l.start.x(), l.start.y(), l.end.x(), l.end.y(), l.bgr);
-        //opencvdrawer.Bresen_antialias_line(l.start.x(), l.start.y(), l.end.x(), l.end.y(), l.bgr);
     }
     draw_qpix();
 }
